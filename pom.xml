@@ -57,6 +57,7 @@
     <modules>
         <module>core</module>
         <module>plugin-one</module>
+        <module>plugin-second</module>
     </modules>
 
 

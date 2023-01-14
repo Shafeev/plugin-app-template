@@ -1,8 +1,18 @@
 package mcs.plugin.app.core;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
+import javafx.application.Application;
+import javafx.event.EventType;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
 import java.lang.module.Configuration;
 import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleFinder;
@@ -13,14 +23,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-public class Main {
+public class Main extends Application {
 
     public static void main(String[] args) {
-        JFrame mainFrame = new JFrame("Plugin test");
-        final JFrame frame = mainFrame;
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 120);
-        frame.getContentPane().setLayout(new FlowLayout());
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        HBox root = FXMLLoader.load(getClass().getResource("/plugins.fxml"));
 
         Path pluginsDir = Paths.get("plugins");
         System.out.println(pluginsDir.toAbsolutePath().toString());
@@ -50,20 +61,21 @@ public class Main {
         // Найдём все реализации сервиса Service в слое плагинов и в слое Boot
         List<Service> services = Service.getServices(layer);
 
-        synchronized (services) {
-            for (Service service : services) {
-                final JButton button = new JButton("run plugin job");
-                button.addActionListener((ActionEvent e) -> {
-                    service.doJob();
-                });
-                frame.getContentPane().add(button);
-            }
-
-            JLabel label = new JLabel("Java version : " + System.getProperty("java.version"));
-            label.setSize(200, 24);
-            frame.getContentPane().add(label);
-            frame.setVisible(true);
+        TextField textField = new TextField("");
+        root.getChildren().add(textField);
+        for (Service service : services) {
+            Button button = new Button(service.getClass().getSimpleName());
+            button.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+                service.doJob();
+                textField.setText(service.getClass().getSimpleName());
+            });
+            root.getChildren().add(button);
         }
-    }
 
+
+
+        primaryStage.setTitle("Plugin");
+        primaryStage.setScene(new Scene(root));
+        primaryStage.show();
+    }
 }

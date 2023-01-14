@@ -1,5 +1,8 @@
 package mcs.plugin.app.core;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.lang.module.Configuration;
 import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleFinder;
@@ -9,10 +12,18 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 public class Main {
 
     public static void main(String[] args) {
+        JFrame mainFrame = new JFrame("Plugin test");
+        final JFrame frame = mainFrame;
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(300, 120);
+        frame.getContentPane().setLayout(new FlowLayout());
+
         Path pluginsDir = Paths.get("plugins");
+        System.out.println(pluginsDir.toAbsolutePath().toString());
 
         // Будем искать плагины в папке plugins
         ModuleFinder pluginsFinder = ModuleFinder.of(pluginsDir);
@@ -38,8 +49,20 @@ public class Main {
 
         // Найдём все реализации сервиса Service в слое плагинов и в слое Boot
         List<Service> services = Service.getServices(layer);
-        for (Service service : services) {
-            service.doJob();
+
+        synchronized (services) {
+            for (Service service : services) {
+                final JButton button = new JButton("run plugin job");
+                button.addActionListener((ActionEvent e) -> {
+                    service.doJob();
+                });
+                frame.getContentPane().add(button);
+            }
+
+            JLabel label = new JLabel("Java version : " + System.getProperty("java.version"));
+            label.setSize(200, 24);
+            frame.getContentPane().add(label);
+            frame.setVisible(true);
         }
     }
 
